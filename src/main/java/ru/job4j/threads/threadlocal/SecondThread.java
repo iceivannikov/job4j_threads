@@ -1,4 +1,4 @@
-package ru.job4j.threadlocal;
+package ru.job4j.threads.threadlocal;
 
 public class SecondThread extends Thread {
     @Override
