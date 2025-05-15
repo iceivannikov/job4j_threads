@@ -8,7 +8,7 @@ import java.net.URL;
 import java.nio.file.Files;
 
 public class Wget implements Runnable {
-    private static final double NANOS_IN_MILLISECOND = 1_000_000.0;
+    private static final int ONE_SECOND_MS = 1000;
     private final String url;
     private final int speed;
 
@@ -19,26 +19,29 @@ public class Wget implements Runnable {
 
     @Override
     public void run() {
-        var file = new File("tmp.xml");
+        var name = url.substring(url.lastIndexOf('/') + 1);
+        if (name.isEmpty()) {
+            name = "downloaded.tmp";
+        }
+        var file = new File(name);
         try (var input = new URL(url).openStream();
              var output = new FileOutputStream(file)) {
             var dataBuffer = new byte[512];
-            while (true) {
-                var startDownload = System.nanoTime();
-                int bytesRead = input.read(dataBuffer, 0, dataBuffer.length);
-                var downloadNanos = System.nanoTime() - startDownload;
-                if (bytesRead == -1) {
-                    break;
+            var downloadedBytes = 0L;
+            var secondStart = System.currentTimeMillis();
+            var bytesPerSecond = speed * (long) ONE_SECOND_MS;
+            int bytesRead;
+            while ((bytesRead = input.read(dataBuffer, 0, dataBuffer.length)) != -1) {
+                downloadedBytes += bytesRead;
+                if (downloadedBytes >= bytesPerSecond) {
+                    var elapsed = System.currentTimeMillis() - secondStart;
+                    if (elapsed < ONE_SECOND_MS) {
+                        Thread.sleep(ONE_SECOND_MS - elapsed);
+                    }
+                    downloadedBytes = 0;
+                    secondStart = System.currentTimeMillis();
                 }
                 output.write(dataBuffer, 0, bytesRead);
-                var downloadMs = downloadNanos / NANOS_IN_MILLISECOND;
-                var expectedTime = bytesRead / speed;
-                var sleepTime = Math.round(expectedTime - downloadMs);
-                if (sleepTime > 0) {
-                    Thread.sleep(sleepTime);
-                }
-                System.out.printf("Read %d bytes in %.2f ms, sleep for %d ms%n",
-                        bytesRead, downloadMs, sleepTime);
             }
         } catch (IOException e) {
             e.printStackTrace();
