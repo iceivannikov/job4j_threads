@@ -1,6 +1,6 @@
 package ru.job4j.buffer;
 
-import ru.job4j.SimpleBlockingQueue;
+import ru.job4j.pool.SimpleBlockingQueue;
 
 public class ParallelSearch {
     public static void main(String[] args) throws InterruptedException {

@@ -1,6 +1,7 @@
 package ru.job4j;
 
 import org.junit.jupiter.api.Test;
+import ru.job4j.pool.SimpleBlockingQueue;
 
 import java.util.ArrayList;
 import java.util.List;
